@@ -1,5 +1,5 @@
 # Tiktok-Predection-ML
-Go-based ML algorithm predicts TikTok views.
+Go-based ML algorithm to predicts a TikTok video views.
 ## Overview
 a Simple machine learning algorithm, fully written in Go without using any 3rd Party Dependencies,
 The goal of this algorithm is to predict the views number of the tiktok Video.
