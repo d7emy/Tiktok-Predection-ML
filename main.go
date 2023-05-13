@@ -130,7 +130,7 @@ func main() {
 		}
 	}
 	prediction := dotProduct(normalize(predectionInput), weights)
-	fmt.Println("Video Count Predection:", int(prediction))
+	fmt.Printf("%s Predection: %d\n", indexesNames[choice], int(prediction))
 
 }
 func findMinAndMax(a []float64) (min float64, max float64) {
