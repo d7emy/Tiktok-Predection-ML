@@ -13,14 +13,16 @@ import (
 )
 
 type input struct {
-	AuthorFollowers    int `json:"Author Followers"`
-	AuthorLikes        int `json:"Author likes"`
-	VideoLikesCount    int `json:"Video Likes Count"`
-	VideoCommentsCount int `json:"Video Comments Count"`
-	VideoSharesCount   int `json:"Video Shares Count"`
+	AuthorFollowers    int `json:"Author Followers"`     //1
+	AuthorLikes        int `json:"Author likes"`         //2
+	VideoViewsCount    int `json:"Video Views Count"`    //4
+	VideoLikesCount    int `json:"Video Likes Count"`    //5
+	VideoCommentsCount int `json:"Video Comments Count"` //6
+	VideoSharesCount   int `json:"Video Shares Count"`   //7
 }
 
-func readInput() (input input) {
+func readInput() []float64 {
+	input := input{}
 	content, err := ioutil.ReadFile("input.json")
 	if err != nil {
 		panic(err)
@@ -29,11 +31,23 @@ func readInput() (input input) {
 	if err != nil {
 		panic(err)
 	}
-	return input
+	return []float64{
+		0,
+		float64(input.AuthorFollowers),
+		float64(input.AuthorLikes),
+		0,
+		float64(input.VideoViewsCount),
+		float64(input.VideoLikesCount),
+		float64(input.VideoCommentsCount),
+		float64(input.VideoSharesCount),
+	}
 }
 func main() {
+	indexes := []int{1, 2, 4, 5, 6, 7}
+	indexesNames := []string{"Author Followers", "Author likes", "Video Views Count", "Video Likes Count", "Video Comments Count", "Video Shares Count"}
 	input := readInput()
 	data := [][]string{}
+	fmt.Println("[~] Loading data...")
 	file, err := os.Open("data.csv")
 	if err != nil {
 		panic(err)
@@ -55,6 +69,7 @@ func main() {
 		}
 		data = append(data, row)
 	}
+	fmt.Printf("[~] %d Rows has been loaded\n", len(data))
 	/*
 		//Hiding Usernames
 		for d := range data {
@@ -67,39 +82,54 @@ func main() {
 		}
 		f.Close()
 	*/
-
+	fmt.Println("[~] Variables:")
+	for i, Var := range indexesNames {
+		fmt.Printf("\t %d - %s\n", i+1, Var)
+	}
+	fmt.Print("[~] Wich variable u want to predict? ")
+	choice := 0
+	fmt.Scanln(&choice)
+	if choice > 2 {
+		choice++
+	}
 	//Randomize
 	rand.Seed(time.Now().UnixNano())
 	rand.Shuffle(len(data), func(i, j int) {
 		data[i], data[j] = data[j], data[i]
 	})
-
+	rte := []int{}
+	for _, index := range indexes {
+		if index != choice {
+			rte = append(rte, index)
+		}
+	}
+	//fmt.Println(rte)
 	//Training
 	XXTrain := [][]float64{}
 	yTrain := []float64{}
 	for _, row := range data {
-		x := []float64{float64(toInt(row[1])), float64(toInt(row[2])), float64(toInt(row[5])), float64(toInt(row[6])), float64(toInt(row[7]))}
+		//fmt.Println([]float64{float64(toInt(row[rte[0]])), float64(toInt(row[rte[1]])), float64(toInt(row[rte[2]])), float64(toInt(row[rte[3]])), float64(toInt(row[rte[4]]))})
+		x := []float64{float64(toInt(row[rte[0]])), float64(toInt(row[rte[1]])), float64(toInt(row[rte[2]])), float64(toInt(row[rte[3]])), float64(toInt(row[rte[4]]))}
 		minVal, maxVal := findMinAndMax(x)
 		f := maxVal - minVal
 		if f != 0 {
 			XXTrain = append(XXTrain, normalize(x))
-			yTrain = append(yTrain, float64(toInt(row[4])))
+			yTrain = append(yTrain, float64(toInt(row[choice])))
 		}
 	}
 
 	weights := TRAIN(XXTrain, yTrain, 0.1, 1000)
 
 	//Prediction
-
-	prediction := dotProduct(normalize(
-		[]float64{
-			float64(input.AuthorFollowers),
-			float64(input.AuthorLikes),
-			float64(input.VideoLikesCount),
-			float64(input.VideoCommentsCount),
-			float64(input.VideoSharesCount),
-		},
-	), weights)
+	//113700 114100 7084 73 266
+	//Hidden,28100,113700,137,114100,7084,73,266,37,1682899637
+	predectionInput := []float64{}
+	for i := range input {
+		if i != 0 && i != 3 && i != choice {
+			predectionInput = append(predectionInput, input[i])
+		}
+	}
+	prediction := dotProduct(normalize(predectionInput), weights)
 	fmt.Println("Video Count Predection:", int(prediction))
 
 }
@@ -157,7 +187,7 @@ func TRAIN(X [][]float64, y []float64, learningRate float64, epochs int) []float
 			yPred := dotProduct(X[i], weights)
 			Error := y[i] - yPred
 			for j := 0; j < len(weights); j++ {
-				weights[j] += learningRate * Error * X[i][j]
+				weights[j] += Error * learningRate * X[i][j]
 			}
 		}
 	}
