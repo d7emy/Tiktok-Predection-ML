@@ -3,7 +3,10 @@
 ## Overview
 a Simple machine learning algorithm, fully written in Go without using any 3rd Party Dependencies,
 The goal of this algorithm is to predict any variable of the data.
-<img src="photos/example.png" height=150><br>
+
+<br>
+<img src="photos/example.png" height=150></br>
+
 ## Input Data [video-input.json]
 - Author Username (ignored and hidden)
 - Author Followers
